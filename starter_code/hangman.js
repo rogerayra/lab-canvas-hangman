@@ -2,8 +2,8 @@ var hangman;
 let canvasHangman;
 
 function Hangman() {
-  this.words = ["1", "12", "123", "1234"];
-  this.secretWord = "Hola";
+  this.words = ["HOLA", "MARIANA", "COMA", "ESTAS"];
+  this.secretWord = "";
   this.letters = [];
   this.guessedLetter = "";
   this.errorsLeft = 10;
@@ -23,32 +23,62 @@ Hangman.prototype.checkClickedLetters = function(key) {
 };
 
 Hangman.prototype.addCorrectLetter = function(i) {
+  this.guessedLetter += i.toLocaleUpperCase();
+  this.letters.push(i);
 
-     this.guessedLetter += this.secretWord[i].toLocaleUpperCase()
+  let indice = this.secretWord.indexOf(i);
+  while (indice > -1 && indice < this.secretWord.length + 1) {
+    canvasHangman.writeCorrectLetter(indice);
+    indice = this.secretWord.indexOf(i, indice + 1);
+  }
+  if (this.checkWinner()) {
+    canvasHangman.winner();
+  }
 };
 
-Hangman.prototype.addWrongLetter = function (letter) {
+Hangman.prototype.addWrongLetter = function(letter) {
   this.errorsLeft--;
+  this.letters.push(letter);
+
+  canvasHangman.writeWrongLetter(letter, this.errorsLeft);
+  if (this.checkGameOver()) {
+    canvasHangman.gameOver();
+  }
 };
 
-Hangman.prototype.checkGameOver = function () {
-  return this.errorsLeft === 0;
+Hangman.prototype.checkGameOver = function() {
+  return !this.errorsLeft > 0;
 };
 
-Hangman.prototype.checkWinner = function () {
-  return this.guessedLetter.split('').sort().join() === this.secretWord.split('').sort().join();
+Hangman.prototype.checkWinner = function() {
+  for (let i = 0; i < this.secretWord.length; i++) {
+    if (!this.guessedLetter.includes(this.secretWord[i])) return false;
+  }
+  return true;
 };
 
 document.getElementById("start-game-button").onclick = function() {
-
   hangman = new Hangman();
-  canvasHangman = new HangmanCanvas(hangman.getWord());
+  hangman.secretWord = hangman.getWord();
+  canvasHangman = new HangmanCanvas(hangman.secretWord);
   canvasHangman.createBoard();
   canvasHangman.drawLines();
-
 };
 
 document.onkeydown = function(e) {
-  let letra = String.fromCharCode(e.keyCode);
-  
-}
+  if (!hangman.checkGameOver() && !hangman.checkWinner()) {
+    if (hangman.checkIfLetter(e.keyCode)) {
+      let letra = String.fromCharCode(e.keyCode);
+      if (hangman.checkClickedLetters(letra)) {
+        if (hangman.secretWord.includes(letra)) {
+          hangman.addCorrectLetter(letra);
+        } else {
+          hangman.addWrongLetter(letra);
+        }
+      } else {
+      }
+
+      hangman.letters.push(letra);
+    }
+  }
+};
